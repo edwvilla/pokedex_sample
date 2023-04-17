@@ -1,30 +1,45 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:pokedex_sample/main.dart';
+import 'package:pokedex_sample/services/pokemon_service/pokemon_service.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  setUpAll(() {
+    // ↓ required to avoid HTTP error 400 mocked returns
+    HttpOverrides.global = null;
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  // TEST POKEMON SERVICE
+  group('Pokemon Service', () {
+    test('Should get a list of 20 objects from api', () async {
+      final pokemonService = PokemonService();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+      final pokemonListData = await pokemonService.fetchPokemons();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      expect(pokemonListData.results.length, 20);
+    });
+
+    test('Should get a list of 20 objects from api with offset 20', () async {
+      final pokemonService = PokemonService();
+
+      final pokemonListData = await pokemonService.fetchPokemons(offset: 20);
+
+      expect(pokemonListData.results.length, 20);
+    });
+
+    test('Should get a list of 20 objects from api with limit 10', () async {
+      final pokemonService = PokemonService();
+
+      final pokemonListData = await pokemonService.fetchPokemons(limit: 10);
+
+      expect(pokemonListData.results.length, 10);
+    });
+
+    test('Should get the detail of a pokemon', () async {
+      final pokemonService = PokemonService();
+
+      final pokemon = await pokemonService.fetchPokemonDetails(pokemonId: 1);
+
+      expect(pokemon.name, 'bulbasaur');
+    });
   });
 }
